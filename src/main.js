@@ -1,4 +1,4 @@
-var ChannelLib = {
+var ChannelOwner = {
     _impl: class {
         // Index constants for the communication buffer.
         STATE_IDX = 0;
@@ -36,7 +36,7 @@ var ChannelLib = {
 
         send_msg(msg) {
             if (Atomics.load(this.comm, this.STATE_IDX) !== this.STATE_IDLE) {
-                throw "MAIN: Invalid sync communication channel state.";
+                throw "OWNER: Invalid sync communication channel state.";
             }
             this._send_request(msg);
             return this._read_response();
@@ -130,15 +130,15 @@ var ChannelLib = {
         }
         return new this._impl(msg_char_len);
     }
-}
+};
 
 var s_channel;
-var s_worker;
+var s_webworker;
 
 function init() {
-    s_channel = ChannelLib.create();
-    s_worker = new Worker("worker.js");
-    s_worker.postMessage(
+    s_channel = ChannelOwner.create();
+    s_webworker = new Worker("worker.js");
+    s_webworker.postMessage(
         {
             salutation:"Message from main",
             comm_buf: s_channel.get_comm_buffer(),
