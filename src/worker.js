@@ -5,6 +5,7 @@ var ChannelWorker = {
         get MSG_SIZE_IDX() { return 1; }
 
         // Communication states.
+        get STATE_SHUTDOWN() { return -1; } // Shutdown
         get STATE_IDLE() { return 0; }
         get STATE_REQ() { return 1; }
         get STATE_RESP() { return 2; }
@@ -29,9 +30,18 @@ var ChannelWorker = {
                 // Read in request
                 var req = this._read_request();
                 console.log("Request: " + req);
+                if (req === this.STATE_SHUTDOWN)
+                    break;
 
-                // Perform async action based on request
-                var resp = await async_call(req);
+                var resp = null;
+                try {
+                    // Perform async action based on request
+                    resp = await async_call(req);
+                }
+                catch (err) {
+                    console.log("Request error: " + err);
+                    resp = JSON.stringify(err);
+                }
 
                 // Send response
                 this._send_response(resp);
@@ -51,6 +61,10 @@ var ChannelWorker = {
                 // The request is complete.
                 if (state === this.STATE_REQ)
                     break;
+
+                // Shutdown the worker.
+                if (state === this.STATE_SHUTDOWN)
+                    return this.STATE_SHUTDOWN;
 
                 // Reset the size and transition to await state.
                 Atomics.store(this.comm, this.MSG_SIZE_IDX, 0);
@@ -118,16 +132,9 @@ var ChannelWorker = {
 async function async_call(msg) {
 
     // Crypto call that uses Promises
-    var keyPair = await self.crypto.subtle.generateKey(
-        {
-            name: "RSA-OAEP",
-            modulusLength: 2048,
-            publicExponent: new Uint8Array([1, 0, 1]),
-            hash: "SHA-256",
-        },
-        true,
-        ["encrypt", "decrypt"]
-    );
+    var data = new Uint8Array([1,2,3,4]);
+    var digest = await crypto.subtle.digest('SHA-1', data);
+    var arr = Array.from(new Uint8Array(digest));
 
     return msg.split("").reverse().join("");
 }
@@ -136,8 +143,17 @@ var s_channel;
 
 // Initialize WebWorker
 onmessage = function (p) {
-    console.log(p.data.salutation);
-    s_channel = ChannelWorker.create(p.data.comm_buf, p.data.msg_buf, p.data.msg_char_len);
+    // The message format in some environments doesn't appear to be consistent.
+    // It is defined as and object with a data field, but in at least one
+    // environment the data member is just sent as-is and not placed in a new
+    // object.
+    var data = p;
+    if (p.data !== undefined) {
+        data = p.data;
+    }
+
+    console.log(data.salutation);
+    s_channel = ChannelWorker.create(data.comm_buf, data.msg_buf, data.msg_char_len);
 
     s_channel.await_request(async_call);
 }

@@ -6,6 +6,7 @@ var ChannelOwner = {
         get COMM_LAST_IDX() { return this.MSG_SIZE_IDX; }
 
         // Communication states.
+        get STATE_SHUTDOWN() { return -1; } // Shutdown
         get STATE_IDLE() { return 0; }
         get STATE_REQ() { return 1; }
         get STATE_RESP() { return 2; }
@@ -40,6 +41,17 @@ var ChannelOwner = {
             }
             this._send_request(msg);
             return this._read_response();
+        }
+
+        shutdown() {
+            if (Atomics.load(this.comm, this.STATE_IDX) !== this.STATE_IDLE) {
+                throw "OWNER: Invalid sync communication channel state.";
+            }
+
+            // Notify webworker
+            Atomics.store(this.comm, this.MSG_SIZE_IDX, 0);
+            Atomics.store(this.comm, this.STATE_IDX, this.STATE_SHUTDOWN);
+            Atomics.notify(this.comm, this.STATE_IDX);
         }
 
         _send_request(msg) {
