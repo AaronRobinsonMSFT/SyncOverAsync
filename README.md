@@ -28,6 +28,10 @@ Running on Chrome the following warning is displayed:
 
 > SharedArrayBuffer will require cross-origin isolation as of M91, around May 2021. See https://developer.chrome.com/blog/enabling-shared-array-buffer/ for more details.
 
+**APIs**
+
+Details on how this approach could be used for Cryptography using SubtleCrypto are [here](./subtlecrypto_impl.md).
+
 ### New async .NET APIs
 
 Exposing new async APIs would enable support and integrate well with the WASM model. A drawback here is this would create a new suite of APIs that may only exist on the WASM TFM. Additionally, reviewing a new set of async APIs in any area represents a big lift for the API review team especially if the use model is intended to change. Even if new APIs are introduced questions around compatibility and existing code transition could negatively impact existing consumers. It is assumed customers would like to simply retarget their code to WASM and not have to rewrite it using special APIs.
