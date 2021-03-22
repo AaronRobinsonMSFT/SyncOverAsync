@@ -7,15 +7,18 @@ This document represents a possible mapping of [SubtleCrypto](https://developer.
     - Supports [AES-CTR, AES-CBC, AES-GCM, AES-KW](https://developer.mozilla.org/docs/Web/API/AesKeyGenParams)
     - For AES-CBC the only available padding is [PKCS#7](https://www.w3.org/TR/WebCryptoAPI/#aes-cbc).
 - TripleDES - **Not supported**
-- RC2 - ?
+- RC2 - **Not supported**
 - DES - **Not supported**
 
 ### Asymmetric cryptography
 - RSA - `SubtleCrypto.encrypt()`
     - Supports [RSA-OAEP](https://developer.mozilla.org/docs/Web/API/SubtleCrypto/encrypt#supported_algorithms).
 - ECDsa - `SubtleCrypto.encrypt()`
-- ECDiffieHellman - ?
-- DSA - ?
+    - WebCrypto - https://www.w3.org/TR/WebCryptoAPI/#ecdsa
+- ECDiffieHellman - `SubtleCrypto.generateKey()`
+    - WebCrypto - https://www.w3.org/TR/WebCryptoAPI/#ecdh
+- DSA - **Not supported**
+    - Node.js has an extension for support.
 
 ### Hashing
 - MD5 - **Not supported**
